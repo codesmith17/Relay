@@ -1,3 +1,3 @@
-module github.com/codesmith17/Relay
+module backend
 
 go 1.23.1
