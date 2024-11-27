@@ -1,16 +1,22 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"backend/api"
+	"backend/handlers"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
-import "backend/api"
-
 
 func main() {
-	http.HandleFunc("/sum", api.SumHandler)
+	// Create a new Echo instance
+	e := echo.New()
 
-	log.Println("Server is running on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	// Middleware for logging and recovery
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	// Routes
+	e.POST("/api/execute", handlers.ExecuteRequest)
+
+	// Start the server
+	e.Logger.Fatal(e.Start(":8080"))
 }
