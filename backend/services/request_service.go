@@ -34,15 +34,16 @@ func ExecuteRequest(reqDetails RequestDetails) (ResponseDetails, error) {
 
 	// Prepare the request
 	jsonData, _ := json.Marshal(reqDetails.Body)
+	
 	req, err := http.NewRequest(reqDetails.Method, reqDetails.URL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return ResponseDetails{}, err
 	}
-
 	// Add headers
 	for key, value := range reqDetails.Headers {
 		req.Header.Set(key, value)
 	}
+	
 
 	// Send the request
 	resp, err := client.Do(req)
