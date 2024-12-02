@@ -2,83 +2,71 @@ package services
 
 import (
 	"bytes"
-	"errors"
+	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
-	"time"
 )
 
-// RequestDetails represents the input for an API request
+// RequestDetails represents the API request details
 type RequestDetails struct {
 	Method  string            `json:"method"`
 	URL     string            `json:"url"`
 	Headers map[string]string `json:"headers"`
-	Body    string            `json:"body,omitempty"`
+	Body    interface{}       `json:"body"`
 }
 
-// ResponseDetails represents the output of an API request
-type ResponseDetails struct {
-	StatusCode int               `json:"statusCode"`
-	Headers    map[string]string `json:"headers"`
-	Body       string            `json:"body"`
-}
-
-// ExecuteRequest performs the API request and returns the response
-func ExecuteRequest(reqDetails RequestDetails) (ResponseDetails, error) {
-	// Validate the URL
-	if reqDetails.URL == "" {
-		return ResponseDetails{}, errors.New("URL is required")
+// ExecuteRequest executes the API request based on the details
+func ExecuteRequest(details RequestDetails) (map[string]interface{}, error) {
+	// Serialize body if provided
+	var requestBody []byte
+	if details.Body != nil {
+		var err error
+		requestBody, err = json.Marshal(details.Body)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling request body: %w", err)
+		}
 	}
 
-	// Create HTTP client
-	client := http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	// Prepare the request body
-	var reqBody io.Reader
-	if reqDetails.Body != "" {
-		reqBody = bytes.NewBuffer([]byte(reqDetails.Body)) // Use raw JSON string
-	} else {
-		reqBody = nil
-	}
-
-	// Create a new HTTP request
-	req, err := http.NewRequest(reqDetails.Method, reqDetails.URL, reqBody)
+	// Create the HTTP request
+	req, err := http.NewRequest(details.Method, details.URL, bytes.NewBuffer(requestBody))
 	if err != nil {
-		return ResponseDetails{}, fmt.Errorf("failed to create request: %w", err)
+		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
-	// Add headers
-	for key, value := range reqDetails.Headers {
+	// Set headers
+	for key, value := range details.Headers {
 		req.Header.Set(key, value)
 	}
 
-	// Execute the request
+	// Perform the request
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return ResponseDetails{}, fmt.Errorf("request execution failed: %w", err)
+		return nil, fmt.Errorf("error performing request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Read response body
-	respBody, err := io.ReadAll(resp.Body)
+	fmt.Println("Response Status:", resp.Status)
+
+	// Read the entire response body into a byte slice
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return ResponseDetails{}, fmt.Errorf("failed to read response: %w", err)
+		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
-	// Extract headers
-	responseHeaders := make(map[string]string)
-	for key, values := range resp.Header {
-		responseHeaders[key] = values[0] // Take the first value for simplicity
+	// Log the raw response body
+	fmt.Println("Raw Response Body:", string(bodyBytes))
+
+	// Parse the response body using the byte slice
+	var parsedResponse map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &parsedResponse); err != nil {
+		return nil, fmt.Errorf("error unmarshaling response body: %w", err)
 	}
 
-	// Return response details
-	return ResponseDetails{
-		StatusCode: resp.StatusCode,
-		Headers:    responseHeaders,
-		Body:       string(respBody),
-	}, nil
+	// Log the parsed response
+	fmt.Println("Parsed Response:", parsedResponse)
+
+	// Return the full response
+	return parsedResponse, nil
 }
-

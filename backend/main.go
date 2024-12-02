@@ -4,6 +4,7 @@ import (
 	"backend/handlers"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"log"
 )
 
 func main() {
@@ -21,9 +22,18 @@ func main() {
 		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
 	}))
 
-	// Routes
-	e.POST("/api/execute", handlers.ExecuteRequest)
+	// API Routes
+	setupRoutes(e)
 
 	// Start the server
+	log.Println("Starting server on port :8080...")
 	e.Logger.Fatal(e.Start(":8080"))
+}
+
+// setupRoutes initializes all API routes
+func setupRoutes(e *echo.Echo) {
+	// Request execution route
+	e.GET("/api/execute", handlers.ExecuteRequest)
+	e.POST("/api/execute", handlers.ExecuteRequest)
+	e.PATCH("/api/execute", handlers.ExecuteRequest)
 }
