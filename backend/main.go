@@ -17,8 +17,8 @@ func main() {
 
 	// CORS Middleware
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:5173"}, // Replace with your frontend URL
-		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.PATCH},
 		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
 	}))
 
@@ -36,4 +36,5 @@ func setupRoutes(e *echo.Echo) {
 	e.GET("/api/execute", handlers.ExecuteRequest)
 	e.POST("/api/execute", handlers.ExecuteRequest)
 	e.PATCH("/api/execute", handlers.ExecuteRequest)
+	e.DELETE("/api/execute", handlers.ExecuteRequest)
 }

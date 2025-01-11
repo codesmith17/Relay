@@ -2,14 +2,16 @@ package handlers
 
 import (
 	"backend/services"
-	"github.com/labstack/echo/v4"
+	"fmt"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 // ExecuteRequest handles API request execution for all HTTP methods
 func ExecuteRequest(c echo.Context) error {
 	var reqDetails services.RequestDetails
-
+	fmt.Println("hello", reqDetails)
 	// Bind and validate the incoming JSON payload
 	if err := c.Bind(&reqDetails); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
@@ -30,7 +32,7 @@ func ExecuteRequest(c echo.Context) error {
 	}
 
 	// Ensure the method is valid
-	if reqDetails.Method != "GET" && reqDetails.Method != "POST" && reqDetails.Method != "PATCH" {
+	if reqDetails.Method != "GET" && reqDetails.Method != "POST" && reqDetails.Method != "PATCH" && reqDetails.Method != "PUT" && reqDetails.Method != "DELETE" {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Unsupported HTTP method: " + reqDetails.Method,
 		})
@@ -43,6 +45,6 @@ func ExecuteRequest(c echo.Context) error {
 			"error": "Failed to execute request: " + err.Error(),
 		})
 	}
-
+	fmt.Println("krishni", response)
 	return c.JSON(http.StatusOK, response)
 }
